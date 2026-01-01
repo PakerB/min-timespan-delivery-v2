@@ -19,6 +19,8 @@ class Namespace(argparse.Namespace):
     if TYPE_CHECKING:
         milp: Path
         directory: Path
+        batch_mode: bool
+        batch_size: int
 
 
 def wrap(content: Any) -> str:

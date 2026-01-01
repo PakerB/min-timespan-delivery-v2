@@ -66,9 +66,6 @@ jobs:
         run: |
           exitcode=0
           set +e
-          let steps_per_run=1
-          let begin=$steps_per_run*${{ matrix.steps }}+1
-          let end=$begin+$steps_per_run-1
 
           execute() {
             command=$1
@@ -83,19 +80,54 @@ jobs:
             fi
           }
 
-          for i in $(seq $begin $end)
+          # Collect all files and sort them
+          echo "Collecting files..."
+          all_files=($(find problems/data/* -type f -name "*.txt" | sort))
+          total_files=${#all_files[@]}
+          
+          echo "Total files found: $total_files"
+          
+          # Calculate which files THIS job should process
+          total_jobs=10
+          job_index=${{ matrix.steps }}
+          files_per_job=$(( (total_files + total_jobs - 1) / total_jobs ))
+          
+          start_index=$(( job_index * files_per_job ))
+          end_index=$(( start_index + files_per_job ))
+          
+          # Ensure we don't exceed array bounds
+          if [ $end_index -gt $total_files ]; then
+            end_index=$total_files
+          fi
+          
+          echo "================================"
+          echo "Job $job_index: Processing files $start_index to $((end_index - 1))"
+          echo "This job will process $((end_index - start_index)) files"
+          echo "================================"
+          
+          processed=0
+          for i in $(seq $start_index $((end_index - 1)))
           do
-            echo "RUN #$i"
-            for path in $(find problems/data/*)
-            do
-              customers=$(grep -oP "(?<=customers )\d+" $path)
-              if [ $customers -le 200 ]
-              then
+            path=${all_files[$i]}
+            
+            # Check if file exists and has customers field
+            if [ -f "$path" ] && grep -q "customers" "$path"; then
+              customers=$(grep -oP "(?<=customers )\d+" "$path" 2>/dev/null || echo "0")
+              
+              # Only process files with <= 200 customers
+              if [ "$customers" -le 200 ] && [ "$customers" -gt 0 ]; then
+                echo "[$((processed + 1))/$((end_index - start_index))] Processing: $(basename $path) (customers: $customers)"
                 execute "./min-timespan-delivery run $path --disable-logging --extra ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                ((processed++))
+              else
+                echo "Skipping $(basename $path) (customers: $customers)"
               fi
-            done
+            fi
           done
 
+          echo "================================"
+          echo "Job $job_index completed: Processed $processed files"
+          echo "================================"
           exit $exitcode
 
       - name: Upload results
