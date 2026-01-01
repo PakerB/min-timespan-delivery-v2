@@ -250,7 +250,8 @@ def main():
     # --- Batch Generation Mode ---
     # Để sinh nhiều file: đặt batch_size = số file muốn sinh (ví dụ: 20)
     # Để sinh 1 file đơn: đặt batch_size = None
-    batch_size = 1000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
+    batch_size = 10000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
+    start_number = 1001   # <--- SỐ THỨ TỰ BẮT ĐẦU (ví dụ: 1 -> 20.35.1.txt, 100 -> 20.35.100.txt, ...)
     
     # --- Output Config ---
     output_folder = "data"  # <--- Tên folder chứa các file txt (trong genData/)
@@ -302,15 +303,15 @@ def main():
         print(f"{'='*60}")
         print(f"Generating {n} instances...")
         print(f"Output directory: {output_dir}")
-        print(f"Filename pattern: {file_prefix}.1.txt to {file_prefix}.{n}.txt")
+        print(f"Filename pattern: {file_prefix}.{start_number}.txt to {file_prefix}.{start_number + n - 1}.txt")
         print(f"{'='*60}\n")
         
         # Generate n instances
-        for i in range(1, n + 1):
+        for i in range(start_number, start_number + n):
             filename = f"{file_prefix}.{i}.txt"
             filepath = os.path.join(output_dir, filename)
             
-            print(f"[{i}/{n}] Generating {filename}...")
+            print(f"[{i - start_number + 1}/{n}] Generating {filename}...")
             instance = generator.generate()
             generator.save_to_file(instance, filepath)
             print()
