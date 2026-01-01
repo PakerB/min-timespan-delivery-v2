@@ -250,7 +250,7 @@ def main():
     # --- Batch Generation Mode ---
     # Để sinh nhiều file: đặt batch_size = số file muốn sinh (ví dụ: 20)
     # Để sinh 1 file đơn: đặt batch_size = None
-    batch_size = 10000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
+    batch_size = 5000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
     start_number = 1001   # <--- SỐ THỨ TỰ BẮT ĐẦU (ví dụ: 1 -> 20.35.1.txt, 100 -> 20.35.100.txt, ...)
     
     # --- Output Config ---
