@@ -83,32 +83,19 @@ jobs:
             fi
           }
 
-          # Limit number of files processed per job to avoid memory issues
-          file_count=0
-          max_files_per_job=500
-
           for i in $(seq $begin $end)
           do
             echo "RUN #$i"
-            for path in $(find problems/data/* | sort)
+            for path in $(find problems/data/*)
             do
-              # Check file limit
-              if [ $file_count -ge $max_files_per_job ]
-              then
-                echo "Reached maximum files per job ($max_files_per_job), stopping..."
-                break 2
-              fi
-              
               customers=$(grep -oP "(?<=customers )\d+" $path)
               if [ $customers -le 200 ]
               then
                 execute "./min-timespan-delivery run $path --disable-logging --extra ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                ((file_count++))
               fi
             done
           done
 
-          echo "Processed $file_count files in this job"
           exit $exitcode
 
       - name: Upload results
@@ -141,7 +128,17 @@ jobs:
           python-version: "3.12"
 
       - name: Summarize results
-        run: python scripts/summary.py
+        run: |
+          python scripts/summary.py
+          
+          # Also create individual summary files for each batch (for large datasets)
+          output_count=$(find outputs -name "*.json" -type f 2>/dev/null | wc -l)
+          echo "Total output files: $output_count"
+          
+          if [ $output_count -gt 1000 ]; then
+            echo "Large dataset detected, creating batched summaries..."
+            python scripts/summary.py --batch-mode
+          fi
         env:
           PYTHONRECURSIONLIMIT: 10000
 

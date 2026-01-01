@@ -29,70 +29,76 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--milp", type=Path, default="problems/milp")
     parser.add_argument("--directory", type=Path, default="outputs/")
+    parser.add_argument("--batch-mode", action="store_true", help="Create separate CSV files for each batch")
+    parser.add_argument("--batch-size", type=int, default=1000, help="Number of files per batch CSV")
     namespace = parser.parse_args(namespace=Namespace())
 
     milp = namespace.milp
     directory = namespace.directory
     output_csv = directory / "summary.csv"
     output_db = directory / "summary.db"
+    batch_mode = namespace.batch_mode
+    csv_batch_size = namespace.batch_size
 
     pattern = re.compile(r"^.+?-\w{8}(?<!solution)\.json$")
+    
+    # Header for CSV files
+    headers = [
+        "Problem",
+        "Customers count",
+        "Trucks count",
+        "Drones count",
+        "Iterations",
+        "Tabu size factor",
+        "Reset after factor",
+        "Adaptive segments",
+        "Total adaptive segments",
+        "Adaptive iterations",
+        "Actual adaptive iterations",
+        "Tabu size",
+        "Reset after",
+        "Max elite set size",
+        "Penalty exponent",
+        "Ejection-chain iterations",
+        "Destroy rate",
+        "Energy model",
+        "Speed type",
+        "Range type",
+        "Waiting time limit",
+        "Truck maximum speed",
+        "Endurance fixed time [s]",
+        "Endurance drone speed [m/s]",
+        "Cost [minute]",
+        "MILP cost [minute]",
+        "Improved [%]",
+        "MILP performance [s]",
+        "MILP status",
+        "Capacity violation [kg]",
+        "Energy violation [J]",
+        "Waiting time violation [s]",
+        "Fixed time violation [s]",
+        "Truck paths",
+        "Drone paths",
+        "Truck working time",
+        "Drone working time",
+        "Feasible",
+        "Last improved",
+        "Elapsed [s]",
+        "Extra",
+        "Faster [%]",
+        "Weight per truck route [kg]",
+        "Customers per truck route",
+        "Truck routes count",
+        "Weight per drone route [kg]",
+        "Customers per drone route",
+        "Drone routes count",
+        "Strategy",
+        "Post-optimization [minute]",
+        "Post-optimization elapsed [s]",
+    ]
 
     with output_csv.open("w", encoding="utf-8") as csv:
         csv.write("sep=,\n")
-        headers = [
-            "Problem",
-            "Customers count",
-            "Trucks count",
-            "Drones count",
-            "Iterations",
-            "Tabu size factor",
-            "Reset after factor",
-            "Adaptive segments",
-            "Total adaptive segments",
-            "Adaptive iterations",
-            "Actual adaptive iterations",
-            "Tabu size",
-            "Reset after",
-            "Max elite set size",
-            "Penalty exponent",
-            "Ejection-chain iterations",
-            "Destroy rate",
-            "Energy model",
-            "Speed type",
-            "Range type",
-            "Waiting time limit",
-            "Truck maximum speed",
-            "Endurance fixed time [s]",
-            "Endurance drone speed [m/s]",
-            "Cost [minute]",
-            "MILP cost [minute]",
-            "Improved [%]",
-            "MILP performance [s]",
-            "MILP status",
-            "Capacity violation [kg]",
-            "Energy violation [J]",
-            "Waiting time violation [s]",
-            "Fixed time violation [s]",
-            "Truck paths",
-            "Drone paths",
-            "Truck working time",
-            "Drone working time",
-            "Feasible",
-            "Last improved",
-            "Elapsed [s]",
-            "Extra",
-            "Faster [%]",
-            "Weight per truck route [kg]",
-            "Customers per truck route",
-            "Truck routes count",
-            "Weight per drone route [kg]",
-            "Customers per drone route",
-            "Drone routes count",
-            "Strategy",
-            "Post-optimization [minute]",
-            "Post-optimization elapsed [s]",
-        ]
         csv.write(",".join(headers))
         csv.write("\n")
 
@@ -160,27 +166,50 @@ if __name__ == "__main__":
             row = 2
             processed_count = 0
             
-            # Collect all files first to avoid recursion issues with directory.walk()
+            # Use iterdir() instead of walk() to avoid deep recursion
+            # Collect all JSON files iteratively
             all_files = []
-            for (dirpath, _, filenames) in directory.walk():
-                for filename in filenames:
+            print("Scanning for JSON files...")
+            
+            # Use os.scandir for better performance and no recursion
+            import os
+            for root, dirs, files in os.walk(directory):
+                for filename in files:
                     if pattern.fullmatch(filename):
-                        all_files.append((dirpath, filename))
+                        all_files.append((Path(root), filename))
             
             # Sort for consistent processing
             all_files.sort(key=lambda x: x[1])
             
-            print(f"Found {len(all_files)} files to process")
+            total_files = len(all_files)
+            print(f"Found {total_files} JSON files to process")
             
-            # Process files in batches to manage memory
+            # Process files in batches with progress reporting
             batch_size = 100
-            for batch_idx in range(0, len(all_files), batch_size):
+            batch_csv_files = []
+            
+            for batch_idx in range(0, total_files, batch_size):
                 batch = all_files[batch_idx:batch_idx + batch_size]
-                print(f"\nProcessing batch {batch_idx // batch_size + 1}/{(len(all_files) + batch_size - 1) // batch_size}")
+                batch_num = batch_idx // batch_size + 1
+                total_batches = (total_files + batch_size - 1) // batch_size
                 
-                for dirpath, filename in batch:
+                print(f"\n{'='*60}")
+                print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} files)")
+                print(f"{'='*60}")
+                
+                # Create batch CSV if in batch mode
+                batch_csv_handle = None
+                if batch_mode:
+                    batch_csv_path = directory / f"summary_batch_{batch_num}.csv"
+                    batch_csv_handle = batch_csv_path.open("w", encoding="utf-8")
+                    batch_csv_handle.write("sep=,\n")
+                    batch_csv_handle.write(",".join(headers) + "\n")
+                    batch_csv_files.append(batch_csv_path)
+                
+                for file_idx, (dirpath, filename) in enumerate(batch):
                     path = dirpath / filename
-                    print(f"[{processed_count + 1}/{len(all_files)}] {path}")
+                    progress = processed_count + 1
+                    print(f"[{progress}/{total_files}] Processing: {filename}")
 
                     content = path.read_text(encoding="utf-8")
                     try:
@@ -263,6 +292,11 @@ if __name__ == "__main__":
                         str(data["post_optimization_elapsed"]),
                     ]
                     csv.write(",".join(segments) + "\n")
+                    
+                    # Also write to batch CSV if enabled
+                    if batch_csv_handle:
+                        batch_csv_handle.write(",".join(segments) + "\n")
+                    
                     row += 1
 
                     cursor.execute(
@@ -320,8 +354,19 @@ if __name__ == "__main__":
                     
                     processed_count += 1
                 
+                # Close batch CSV if opened
+                if batch_csv_handle:
+                    batch_csv_handle.close()
+                    if batch_mode:
+                        batch_csv_path = directory / f"summary_batch_{batch_num}.csv"
+                        print(f"✓ Created batch CSV: {batch_csv_path.name}")
+                
                 # Commit batch to database
                 connection.commit()
-                print(f"Committed batch {batch_idx // batch_size + 1} to database")
+                print(f"✓ Committed batch {batch_num} to database ({len(batch)} files)")
             
-            print(f"\nTotal files processed: {processed_count}")
+            print(f"\n{'='*60}")
+            print(f"✓ COMPLETED: Processed {processed_count} files")
+            if batch_mode and batch_csv_files:
+                print(f"✓ Created {len(batch_csv_files)} batch CSV files")
+            print(f"{'='*60}")
