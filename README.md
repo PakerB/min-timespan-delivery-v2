@@ -2,7 +2,7 @@
 
 This repository contains the original implementation of the paper **"The Min-Makespan Vehicle Routing Problem with Drones under Multiple Trips and Visits"**, which is packed with a bunch of undocumented optimizations that somehow make it fast, though there is still plenty of room to make it faster (and cleaner).
 
-All experimental results in the paper come straight from the automated [workflow runs](https://github.com/Serious-senpai/min-timespan-delivery-v2/actions) of this repository. Thanks to [GitHub Actions](https://github.com/features/actions), experiments run themselves, results are reproducible, and nobody has to trust "it worked on my machine".
+All experimental results in the paper come straight from the automated [workflow runs](https://github.com/PakerB/min-timespan-delivery-v2/actions) of this repository. Thanks to [GitHub Actions](https://github.com/features/actions), experiments run themselves, results are reproducible, and nobody has to trust "it worked on my machine".
 
 ## Build and run
 

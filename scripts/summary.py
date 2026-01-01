@@ -5,9 +5,14 @@ import itertools
 import json
 import re
 import sqlite3
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
+
+
+# Increase recursion limit to handle large number of files
+sys.setrecursionlimit(10000)
 
 
 class Namespace(argparse.Namespace):
@@ -153,14 +158,29 @@ if __name__ == "__main__":
             query = "INSERT INTO summary VALUES (" + ", ".join(itertools.repeat("?", len(columns))) + ")"
 
             row = 2
+            processed_count = 0
+            
+            # Collect all files first to avoid recursion issues with directory.walk()
+            all_files = []
             for (dirpath, _, filenames) in directory.walk():
-                filenames.sort()
                 for filename in filenames:
-                    if not pattern.fullmatch(filename):
-                        continue
-
+                    if pattern.fullmatch(filename):
+                        all_files.append((dirpath, filename))
+            
+            # Sort for consistent processing
+            all_files.sort(key=lambda x: x[1])
+            
+            print(f"Found {len(all_files)} files to process")
+            
+            # Process files in batches to manage memory
+            batch_size = 100
+            for batch_idx in range(0, len(all_files), batch_size):
+                batch = all_files[batch_idx:batch_idx + batch_size]
+                print(f"\nProcessing batch {batch_idx // batch_size + 1}/{(len(all_files) + batch_size - 1) // batch_size}")
+                
+                for dirpath, filename in batch:
                     path = dirpath / filename
-                    print(path)
+                    print(f"[{processed_count + 1}/{len(all_files)}] {path}")
 
                     content = path.read_text(encoding="utf-8")
                     try:
@@ -297,3 +317,11 @@ if __name__ == "__main__":
                             config["strategy"],
                         )
                     )
+                    
+                    processed_count += 1
+                
+                # Commit batch to database
+                connection.commit()
+                print(f"Committed batch {batch_idx // batch_size + 1} to database")
+            
+            print(f"\nTotal files processed: {processed_count}")
