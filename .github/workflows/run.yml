@@ -1,6 +1,6 @@
 name: Run algorithm
 
-on: push
+on: workflow_dispatch  # Changed to manual only - use run-batch.yml for automated runs
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
