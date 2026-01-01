@@ -1,6 +1,6 @@
 name: Lint
 
-on: [ push, pull_request ]
+on: workflow_dispatch  # Chỉ chạy manual, không auto khi push
 
 permissions:
   contents: read
