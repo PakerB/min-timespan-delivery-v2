@@ -255,16 +255,16 @@ def main():
     
     # --- Output Config ---
     output_folder = "data"  # <--- Tên folder chứa các file txt (trong genData/)
-    file_prefix = "20.17"        # <--- Prefix của file (ví dụ: 20.35 -> 20.35.1.txt, 20.35.2.txt, ...)
+    file_prefix = "20.35"        # <--- Prefix của file (ví dụ: 20.35 -> 20.35.1.txt, 20.35.2.txt, ...)
     single_output = "instance.txt"  # <--- Tên file nếu chỉ sinh 1 file (khi batch_size = None)
     
     # --- Problem Config ---
     num_customers = 20   # <--- Số lượng customers
-    num_trucks = 2       # <--- Số lượng trucks
-    num_drones = 2       # <--- Số lượng drones
+    num_trucks = 1       # <--- Số lượng trucks
+    num_drones = 0       # <--- Số lượng drones
     
     # --- Advanced Config ---
-    map_size = 17000.0           # Kích thước bản đồ (meters)
+    map_size = 35000.0           # Kích thước bản đồ (meters)
     p_near = 0.5                 # Xác suất customer nằm trong vùng near (0.0 - 1.0)
     p_light_near = 0.80          # Xác suất demand nhẹ trong vùng near (0.0 - 1.0)
     p_light_far = 0.50           # Xác suất demand nhẹ trong vùng far (0.0 - 1.0)
