@@ -95,7 +95,7 @@ def main():
     data_folder = script_dir / "data"
     
     # Đường dẫn thư mục đích
-    target_folder = r"D:\k0d3\TTTH\Data"
+    target_folder = r"E:\TTTH\attentionV2\train_data\Lan1"
     
     # Kiểm tra folder data có tồn tại không
     if not data_folder.exists():

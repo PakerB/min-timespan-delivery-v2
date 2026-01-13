@@ -250,12 +250,12 @@ def main():
     # --- Batch Generation Mode ---
     # Để sinh nhiều file: đặt batch_size = số file muốn sinh (ví dụ: 20)
     # Để sinh 1 file đơn: đặt batch_size = None
-    batch_size = 4000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
-    start_number = 4001   # <--- SỐ THỨ TỰ BẮT ĐẦU (ví dụ: 1 -> 20.35.1.txt, 100 -> 20.35.100.txt, ...)
+    batch_size = 1000  # <--- THAY ĐỔI SỐ LƯỢNG FILE Ở ĐÂY (hoặc None nếu chỉ muốn 1 file)
+    start_number = 3003   # <--- SỐ THỨ TỰ BẮT ĐẦU (ví dụ: 1 -> 20.35.1.txt, 100 -> 20.35.100.txt, ...)
     
     # --- Output Config ---
     output_folder = "data"  # <--- Tên folder chứa các file txt (trong genData/)
-    file_prefix = "20.35"        # <--- Prefix của file (ví dụ: 20.35 -> 20.35.1.txt, 20.35.2.txt, ...)
+    file_prefix = "20.10"        # <--- Prefix của file (ví dụ: 20.35 -> 20.35.1.txt, 20.35.2.txt, ...)
     single_output = "instance.txt"  # <--- Tên file nếu chỉ sinh 1 file (khi batch_size = None)
     
     # --- Problem Config ---
@@ -264,8 +264,8 @@ def main():
     num_drones = 0       # <--- Số lượng drones
     
     # --- Advanced Config ---
-    map_size = 35000.0           # Kích thước bản đồ (meters)
-    p_near = 0.5                 # Xác suất customer nằm trong vùng near (0.0 - 1.0)
+    map_size = 10000.0           # Kích thước bản đồ (meters)
+    p_near = 0.8                 # Xác suất customer nằm trong vùng near (0.0 - 1.0)
     p_light_near = 0.80          # Xác suất demand nhẹ trong vùng near (0.0 - 1.0)
     p_light_far = 0.50           # Xác suất demand nhẹ trong vùng far (0.0 - 1.0)
     drone_endurance = 700.0      # Thời gian bay tối đa của drone (giây)
